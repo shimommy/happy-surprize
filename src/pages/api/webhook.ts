@@ -34,8 +34,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
 ) {
-  console.log(req)
-
   if (req.method !== 'POST') {
     res.status(405).end()
     return
@@ -59,6 +57,7 @@ export default async function handler(
     return
   }
 
+  console.log(`headers: ${headers}`)
   const lineSignature = headers['x-line-signature'] as string
   const validation = validateSignature(
     req.body,
