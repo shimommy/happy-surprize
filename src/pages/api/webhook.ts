@@ -10,6 +10,11 @@ type Response = {
   message?: string
 }
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 async function runMiddleware(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -62,18 +67,19 @@ export default async function handler(
   }
 
   const body: WebhookRequestBody = req.body
-
   await Promise.all(
     body.events.map((event) =>
       (async () => {
         if (event.mode === 'active') {
           switch (event.type) {
-            case 'message':
+            case 'message': {
+              console.log(event)
               new MessageClient().reply(event.replyToken, {
                 type: 'text',
                 text: `Happy Wedding!!!`,
               })
               break
+            }
           }
         }
       })()
