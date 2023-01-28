@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { createHmac } from 'crypto'
 import { Middleware } from '@line/bot-sdk/lib/middleware'
 import * as line from '../../lib/line'
-import { WebhookRequestBody } from '@line/bot-sdk'
+import { validateSignature, WebhookRequestBody } from '@line/bot-sdk'
 import { UserClient } from '@/clients/user'
 import { MessageClient } from '@/clients/message'
 
@@ -50,6 +50,7 @@ export default async function handler(
     }
 
     res.status(500).end()
+    return
   }
 
   const { headers } = req
@@ -58,13 +59,14 @@ export default async function handler(
     return
   }
 
-  const token = process.env.CHANNEL_SECRET
-  const signature = createHmac('SHA256', token!)
-    .update(req.body)
-    .digest('base64')
-  const lineSignature = headers['x-line-signature']
+  const lineSignature = headers['x-line-signature'] as string
+  const validation = validateSignature(
+    req.body,
+    process.env.CHANNEL_SECRET!,
+    lineSignature
+  )
 
-  if (signature !== lineSignature) {
+  if (!validation) {
     res.status(403).json({ message: 'signature invalid' })
     return
   }
