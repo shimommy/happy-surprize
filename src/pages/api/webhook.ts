@@ -1,21 +1,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createHmac } from 'crypto'
 import { Middleware } from '@line/bot-sdk/lib/middleware'
 import * as line from '../../lib/line'
 import { validateSignature, WebhookRequestBody } from '@line/bot-sdk'
-import { UserClient } from '@/clients/user'
 import { MessageClient } from '@/clients/message'
 
 type Response = {
   name?: string
   message?: string
-}
-
-export const config = {
-  api: {
-    bodyParser: false, // Necessary for line.middleware
-  },
 }
 
 async function runMiddleware(
@@ -57,10 +49,9 @@ export default async function handler(
     return
   }
 
-  console.log(`headers: ${headers}`)
   const lineSignature = headers['x-line-signature'] as string
   const validation = validateSignature(
-    req.body,
+    JSON.stringify(req.body),
     process.env.CHANNEL_SECRET!,
     lineSignature
   )
@@ -71,28 +62,18 @@ export default async function handler(
   }
 
   const body: WebhookRequestBody = req.body
-  console.log(body)
 
   await Promise.all(
     body.events.map((event) =>
       (async () => {
         if (event.mode === 'active') {
           switch (event.type) {
-            case 'message': {
+            case 'message':
               new MessageClient().reply(event.replyToken, {
                 type: 'text',
                 text: `Happy Wedding!!!`,
               })
               break
-            }
-            case 'follow': {
-              const profile = await new UserClient().find(event.source.userId!)
-              new MessageClient().reply(event.replyToken, {
-                type: 'text',
-                text: `こんにちは ${profile.displayName} さん`,
-              })
-              break
-            }
           }
         }
       })()
