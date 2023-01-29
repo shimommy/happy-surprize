@@ -15,6 +15,7 @@ export const config = {
     bodyParser: false,
   },
 }
+
 async function runMiddleware(
   req: NextApiRequest,
   res: NextApiResponse,
