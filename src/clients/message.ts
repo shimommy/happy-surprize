@@ -7,4 +7,8 @@ export class MessageClient {
   reply(replyToken: string, messages: Message | Message[]) {
     this.client.replyMessage(replyToken, messages)
   }
+
+  async getContent(messageId: string) {
+    return this.client.getMessageContent(messageId)
+  }
 }

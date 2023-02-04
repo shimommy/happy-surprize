@@ -2,8 +2,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Middleware } from '@line/bot-sdk/lib/middleware'
 import * as line from '../../lib/line'
-import { validateSignature, WebhookRequestBody } from '@line/bot-sdk'
+import {
+  Message,
+  MessageEvent,
+  validateSignature,
+  WebhookRequestBody,
+  ImageEventMessage,
+} from '@line/bot-sdk'
 import { MessageClient } from '@/clients/message'
+import { S3Client } from '@/clients/s3'
+import { ReceiveClient } from '@/clients/receive'
 
 type Response = {
   name?: string
@@ -32,6 +40,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
 ) {
+  // validate
   if (req.method !== 'POST') {
     res.status(405).end()
     return
@@ -67,25 +76,65 @@ export default async function handler(
     return
   }
 
+  // reply
+  const client = new MessageClient()
+  const reply = (
+    index: number,
+    replyToken: string,
+    messages: Message | Message[]
+  ) => {
+    if (index !== 1) {
+      return
+    }
+
+    client.reply(replyToken, messages)
+  }
+
+  // message handle
+  const s3 = new S3Client()
+  const dynamodb = new ReceiveClient()
+  const handleMessage = async (event: MessageEvent) => {
+    const { message } = event
+    switch (message.type) {
+      case 'image': {
+        reply(message.imageSet?.index ?? 1, event.replyToken, {
+          type: 'text',
+          text: `写真を送ってくれてありがとう！\n笑顔レベルの計測完了までしばらくお待ちください💍`,
+        })
+
+        const stream = await client.getContent(event.message.id)
+        await s3.uploadStream(event.source.userId!, event.message.id, stream)
+        dynamodb.putItem(
+          event.message.id,
+          event.source.userId!,
+          event.replyToken
+        )
+        break
+      }
+      default: {
+        break
+      }
+    }
+  }
+
+  // event handle
   const body: WebhookRequestBody = req.body
-  await Promise.all(
-    body.events.map((event) =>
-      (async () => {
-        if (event.mode === 'active') {
-          switch (event.type) {
-            case 'message': {
-              console.log(event)
-              new MessageClient().reply(event.replyToken, {
-                type: 'text',
-                text: `Happy Wedding!!!`,
-              })
-              break
-            }
-          }
+  const executeHandles = body.events.map((event, index) =>
+    (async () => {
+      if (event.mode !== 'active') {
+        return
+      }
+
+      // console.log(event)
+      switch (event.type) {
+        case 'message': {
+          handleMessage(event)
+          break
         }
-      })()
-    )
+      }
+    })()
   )
 
-  res.status(200).json({ name: 'John Doe' })
+  await Promise.all(executeHandles)
+  res.status(200).json({})
 }
