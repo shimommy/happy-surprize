@@ -7,11 +7,10 @@ import {
   MessageEvent,
   validateSignature,
   WebhookRequestBody,
-  ImageEventMessage,
 } from '@line/bot-sdk'
 import { MessageClient } from '@/clients/message'
 import { S3Client } from '@/clients/s3'
-import { ReceiveClient } from '@/clients/receive'
+import { ReceiveRepository } from '@/repositories/receive'
 
 type Response = {
   name?: string
@@ -92,7 +91,7 @@ export default async function handler(
 
   // message handle
   const s3 = new S3Client()
-  const dynamodb = new ReceiveClient()
+  const dynamodb = new ReceiveRepository()
   const handleMessage = async (event: MessageEvent) => {
     const { message } = event
     switch (message.type) {
@@ -104,11 +103,7 @@ export default async function handler(
 
         const stream = await client.getContent(event.message.id)
         await s3.uploadStream(event.source.userId!, event.message.id, stream)
-        dynamodb.putItem(
-          event.message.id,
-          event.source.userId!,
-          event.replyToken
-        )
+        dynamodb.putItem(event.message.id, event.source.userId!)
         break
       }
       default: {

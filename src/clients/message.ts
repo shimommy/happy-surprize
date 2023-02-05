@@ -8,7 +8,15 @@ export class MessageClient {
     this.client.replyMessage(replyToken, messages)
   }
 
+  message(to: string, messages: Message | Message[]) {
+    this.client.pushMessage(to, messages)
+  }
+
   async getContent(messageId: string) {
     return this.client.getMessageContent(messageId)
+  }
+
+  async getProfile(userId: string) {
+    return this.client.getProfile(userId)
   }
 }
