@@ -7,6 +7,7 @@ export class Score {
     readonly partition: string,
     readonly sortKey: string,
     readonly userName: string,
+    readonly imageId: string,
     readonly detail: ScoreDetail,
     readonly scoreType: ScoreType
   ) {}

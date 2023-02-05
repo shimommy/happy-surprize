@@ -119,6 +119,7 @@ export default async function handler(
       userId,
       `${scoreDetail.score()}|${imageId}`,
       userName,
+      imageId,
       'OverAllRanking',
       scoreDetail
     )

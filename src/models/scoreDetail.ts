@@ -22,6 +22,22 @@ export class ScoreDetail {
     readonly smile: number = 0
   ) {}
 
+  static fromRecord(record: Record<string, AttributeValue> | undefined) {
+    if (!record) {
+      return new ScoreDetail()
+    }
+
+    return new ScoreDetail(
+      Number(record.happy.N!),
+      Number(record.surprize.N!),
+      Number(record.disgusted.N!),
+      Number(record.confused.N!),
+      Number(record.calm.N!),
+      Number(record.sad.N!),
+      Number(record.smile.N!)
+    )
+  }
+
   static fromFaceDetails(faceDetails: FaceDetail[]): ScoreDetail {
     let happy: number = 0,
       surprize: number = 0,
@@ -85,12 +101,12 @@ export class ScoreDetail {
     const length = faceDetails.length
     return new ScoreDetail(
       happy / length,
-      calm / length,
-      sad / length,
       surprize / length,
-      confused / length,
       angry / length,
       disgusted / length,
+      confused / length,
+      calm / length,
+      sad / length,
       smile
     )
   }

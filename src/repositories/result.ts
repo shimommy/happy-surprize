@@ -1,7 +1,13 @@
 import { dynamodb } from '@/lib/aws'
-import { ScoreType } from '@/models/score'
+import { Score, ScoreType } from '@/models/score'
 import { ScoreDetail } from '@/models/scoreDetail'
-import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
+import {
+  AttributeValue,
+  GetItemCommand,
+  GetItemCommandOutput,
+  PutItemCommand,
+  QueryCommand,
+} from '@aws-sdk/client-dynamodb'
 
 export class ResultRepository {
   constructor(
@@ -9,10 +15,26 @@ export class ResultRepository {
     private tableName = 'RekognitionResultTable'
   ) {}
 
+  decode(item: Record<string, AttributeValue> | undefined): Score | undefined {
+    if (!item) {
+      return
+    }
+
+    return {
+      partition: item.partition.S ?? '',
+      sortKey: item.sortKey.S ?? '',
+      userName: item.userName.S ?? '',
+      imageId: item.imageId.S ?? '',
+      scoreType: item.scoreType.S as ScoreType,
+      detail: ScoreDetail.fromRecord(item.scoreDetail.M!),
+    }
+  }
+
   async putItem(
     userId: string,
     sortKey: string,
     userName: string,
+    imageId: string,
     scoreType: ScoreType,
     scoreDetail: ScoreDetail
   ) {
@@ -22,6 +44,7 @@ export class ResultRepository {
         partition: { S: userId },
         sortKey: { S: sortKey },
         userName: { S: userName },
+        imageId: { S: imageId },
         scoreType: { S: scoreType },
         scoreDetail: { M: scoreDetail.toAttributeValues() },
       },
@@ -43,7 +66,7 @@ export class ResultRepository {
     }
   }
 
-  getItem(partition: string, sortKey: string) {
+  async getItem(partition: string, sortKey: string) {
     const command = new GetItemCommand({
       TableName: this.tableName,
       Key: {
@@ -51,7 +74,50 @@ export class ResultRepository {
         sortKey: { S: sortKey },
       },
     })
+
+    try {
+      const result = await this.db.send(command)
+      return this.decode(result.Item)
+    } catch (e) {
+      console.error('Error', e)
+    }
   }
 
-  queryOverAllRanking() {}
+  async getItemFromImageId(imageId: string) {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: 'imageId-index',
+      KeyConditionExpression: 'imageId = :i',
+      ExpressionAttributeValues: {
+        ':i': { S: imageId },
+      },
+    })
+
+    try {
+      const result = await this.db.send(command)
+      return result.Items!.map((Item) => this.decode(Item)!)[0]
+    } catch (e) {
+      console.error('Error', e)
+    }
+  }
+
+  async queryOverAllRanking() {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: 'scoreType-index',
+      KeyConditionExpression: 'scoreType = :t',
+      Limit: 300,
+      ScanIndexForward: false,
+      ExpressionAttributeValues: {
+        ':t': { S: 'OverAllRanking' },
+      },
+    })
+
+    try {
+      const result = await this.db.send(command)
+      return result.Items!.map((Item) => this.decode(Item)!)
+    } catch (e) {
+      console.error('Error', e)
+    }
+  }
 }
