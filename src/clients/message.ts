@@ -1,5 +1,5 @@
 import { lineClient } from '@/lib/line'
-import { Message } from '@line/bot-sdk'
+import { Message, TemplateMessage, TextMessage } from '@line/bot-sdk'
 
 export class MessageClient {
   constructor(private client = lineClient()) {}
@@ -8,7 +8,11 @@ export class MessageClient {
     this.client.replyMessage(replyToken, messages)
   }
 
-  message(to: string, messages: Message | Message[]) {
+  message(to: string, messages: TextMessage | TextMessage[]) {
+    this.client.pushMessage(to, messages)
+  }
+
+  templateMessage(to: string, messages: TemplateMessage | TemplateMessage[]) {
     this.client.pushMessage(to, messages)
   }
 

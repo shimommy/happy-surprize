@@ -30,6 +30,7 @@ export class ScoreDetail {
     return new ScoreDetail(
       Number(record.happy.N!),
       Number(record.surprize.N!),
+      Number(record.angry.N!),
       Number(record.disgusted.N!),
       Number(record.confused.N!),
       Number(record.calm.N!),
@@ -89,13 +90,22 @@ export class ScoreDetail {
       }
 
       const { Value, Confidence } = Smile
+      // 笑顔ではないまたは信頼度がない場合はスマイル係数を測定しない
       if (!Value || !Confidence) {
         return
       }
 
-      if (Confidence > 94.0) {
-        smile += 0.1
+      if (Confidence < 91.0) {
+        return
       }
+
+      // 94以上ならば係数を上げる
+      if (smile == 1.0) {
+        smile += 0.1
+        return
+      }
+
+      smile += 0.01
     })
 
     const length = faceDetails.length
@@ -126,12 +136,12 @@ export class ScoreDetail {
   toAttributeValues(): Record<string, AttributeValue> {
     return {
       happy: { N: `${this.happy}` },
-      calm: { N: `${this.calm}` },
       surprize: { N: `${this.surprize}` },
-      sad: { N: `${this.sad}` },
       angry: { N: `${this.angry}` },
-      confused: { N: `${this.confused}` },
       disgusted: { N: `${this.disgusted}` },
+      confused: { N: `${this.confused}` },
+      calm: { N: `${this.calm}` },
+      sad: { N: `${this.sad}` },
       smile: { N: `${this.smile}` },
     }
   }

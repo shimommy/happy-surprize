@@ -30,7 +30,7 @@ export class RekognitionClient {
 
     return faceDetails.filter((faceDetail) => {
       const { Confidence } = faceDetail
-      return Confidence && Confidence > 99.0
+      return Confidence && Confidence > 99.9
     })
   }
 }

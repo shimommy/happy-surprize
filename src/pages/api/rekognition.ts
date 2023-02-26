@@ -2,7 +2,7 @@
 import { MessageClient } from '@/clients/message'
 import { RekognitionClient } from '@/clients/rekognition'
 import { S3Client } from '@/clients/s3'
-import { Message } from '@line/bot-sdk'
+import { TemplateMessage, TextMessage } from '@line/bot-sdk'
 import { DynamoDBStreamEvent } from 'aws-lambda/trigger/dynamodb-stream'
 import imageThumbnail from 'image-thumbnail'
 import type { NextApiRequest, NextApiResponse } from 'next'
@@ -12,7 +12,7 @@ import { createCanvas, loadImage } from 'canvas'
 import { FaceDetail } from '@aws-sdk/client-rekognition'
 import { ScoreDetail } from '@/models/scoreDetail'
 import { ResultRepository } from '@/repositories/result'
-import { Score } from '@/models/score'
+import { round } from '@/util/math'
 
 export default async function handler(
   req: NextApiRequest,
@@ -40,8 +40,15 @@ export default async function handler(
 
   // reply result
   const client = new MessageClient()
-  const message = (userId: string, messages: Message | Message[]) => {
+  const message = (userId: string, messages: TextMessage | TextMessage[]) => {
     client.message(userId, messages)
+  }
+
+  const templateMessage = (
+    userId: string,
+    messages: TemplateMessage | TemplateMessage[]
+  ) => {
+    client.templateMessage(userId, messages)
   }
 
   // thumbnail
@@ -115,9 +122,11 @@ export default async function handler(
     imageId: string,
     scoreDetail: ScoreDetail
   ) => {
+    const score = scoreDetail.score()
     const result = await repository.putItem(
       userId,
-      `${scoreDetail.score()}|${imageId}`,
+      `${score}|${imageId}`,
+      score,
       userName,
       imageId,
       'OverAllRanking',
@@ -128,9 +137,23 @@ export default async function handler(
       return
     }
 
-    message(userId, {
-      type: 'text',
-      text: `判定が完了しました！該当ページにアクセスして確認してみましょう！\n\nhttps://udttundhpd.ap-northeast-1.awsapprunner.com/users/${userId}/photo/${imageId}`,
+    templateMessage(userId, {
+      type: 'template',
+      altText: '判定が完了しました！',
+      template: {
+        type: 'buttons',
+        title: `${round(score)} pt`,
+        text: '判定が完了しました！',
+        thumbnailImageUrl: `https://happy-surprize.s3.ap-northeast-1.amazonaws.com/${userId}/images/${imageId}-box`,
+        imageSize: 'cover',
+        actions: [
+          {
+            type: 'uri',
+            label: '詳細を見る',
+            uri: `http://localhost:3000/users/${userId}/photo/${imageId}`,
+          },
+        ],
+      },
     })
   }
 

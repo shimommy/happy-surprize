@@ -120,7 +120,6 @@ export default async function handler(
         return
       }
 
-      // console.log(event)
       switch (event.type) {
         case 'message': {
           handleMessage(event)

@@ -2,6 +2,7 @@ import { s3 } from '@/lib/aws'
 import { GetObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import { Readable } from 'stream'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 type ImageType = 'images' | 'thumbnails'
 
@@ -18,6 +19,21 @@ export class S3Client {
       const result = await this.client.send(command)
       const array = await result.Body!.transformToByteArray()
       return Buffer.from(array.buffer)
+    } catch (e) {
+      console.error('Error', e)
+    }
+  }
+
+  async getPresignedUrl(Key: string) {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key,
+    })
+
+    try {
+      return await getSignedUrl(this.client as any, command as any, {
+        expiresIn: 10800,
+      })
     } catch (e) {
       console.error('Error', e)
     }

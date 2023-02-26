@@ -7,12 +7,14 @@ import { round } from '@/util/math'
 import Link from 'next/link'
 
 type Props = {
+  rank: number
   score: Score
 }
 
-export default function Photo({ score }: Props) {
+export default function Ranking({ score, rank }: Props) {
   const src = `${process.env.NEXT_PUBLIC_BUCKET}${score.partition}/images/${score.imageId}`
   const totalScore = score.sortKey.split('|')[0]
+
   return (
     <>
       <Head>
@@ -206,14 +208,17 @@ export default function Photo({ score }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { userId, id } = context.query
+  const { rank } = context.query
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_HOST}api/users/${userId}/photo/${id}`
+    `${process.env.NEXT_PUBLIC_HOST}api/ranking/${rank}`
   )
+
+  const list = await response.json()
 
   return {
     props: {
-      score: await response.json(),
+      rank: Number(rank),
+      score: list[Number(rank) - 1],
     },
   }
 }

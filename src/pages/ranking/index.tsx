@@ -1,9 +1,9 @@
 import FaceImage from '@/components/Image/FaceImage'
-import { useUploads } from '@/hooks/uploads/useUploads'
+import { useRanking } from '@/hooks/ranking/useRanking'
 import Head from 'next/head'
 
-export default function Home() {
-  const { loading, success, uploads } = useUploads()
+export default function Ranking() {
+  const { loading, success, ranking } = useRanking()
 
   return (
     <>
@@ -16,9 +16,11 @@ export default function Home() {
         />
       </Head>
       <main className="w-screen h-screen bg-black bg-opacity-40 overflow-auto">
-        <h1 className="px-5 pt-4 sm:px-8 sm:pb-0 text-lg sm:text-5xl">
-          HAPPY SURPRIZE
-        </h1>
+        <header>
+          <h1 className="px-5 pt-4 sm:px-8 sm:pb-0 text-lg sm:text-5xl">
+            HAPPY SURPRIZE
+          </h1>
+        </header>
         <div className="sm:p-8 p-5">
           {loading ? (
             <div className="flex justify-center">
@@ -26,13 +28,14 @@ export default function Home() {
             </div>
           ) : (
             <div className="gap-2 columns-2 sm:gap-4 md:columns-3 lg:columns-5 [&>div:not(:first-child)]:mt-2 sm:[&>div:not(:first-child)]:mt-8">
-              {uploads.map((upload) => {
+              {ranking.map((data, index) => {
                 return (
                   <FaceImage
-                    key={upload.imageId}
+                    key={data.imageId}
                     isLink={true}
-                    userId={upload.partition}
-                    imageId={upload.imageId}
+                    userId={data.partition}
+                    imageId={data.imageId}
+                    isRank={index + 1}
                   ></FaceImage>
                 )
               })}
