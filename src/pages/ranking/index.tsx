@@ -8,8 +8,8 @@ export default function Ranking() {
   return (
     <>
       <Head>
-        <title>Happy Surprize</title>
-        <meta name="description" content="Happy Surprize" />
+        <title>Happy Surprise</title>
+        <meta name="description" content="Happy Surprise" />
         <meta
           name="viewport"
           content="width=device-width, heigh=device-heigh initial-scale=1"
@@ -18,7 +18,7 @@ export default function Ranking() {
       <main className="w-screen h-screen bg-black bg-opacity-40 overflow-auto">
         <header>
           <h1 className="px-5 pt-4 sm:px-8 sm:pb-0 text-lg sm:text-5xl">
-            HAPPY SURPRIZE
+            HAPPY SURPRISE
           </h1>
         </header>
         <div className="sm:p-8 p-5">
