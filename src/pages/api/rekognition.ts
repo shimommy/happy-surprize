@@ -150,7 +150,7 @@ export default async function handler(
           {
             type: 'uri',
             label: '詳細を見る',
-            uri: `${process.env.NEXT_PUBLIC_HOST}/users/${userId}/photo/${imageId}`,
+            uri: `${process.env.NEXT_PUBLIC_HOST}users/${userId}/photo/${imageId}`,
           },
         ],
       },
