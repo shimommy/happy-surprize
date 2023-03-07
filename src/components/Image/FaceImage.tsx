@@ -10,9 +10,9 @@ type Props = {
 }
 
 export default function FaceImage(props: Props) {
-  const src = `${process.env.NEXT_PUBLIC_BUCKET}${props.userId}/images/${
-    props.imageId
-  }${props.isBox ? '-box' : ''}`
+  const src = `${process.env.NEXT_PUBLIC_BUCKET}${props.userId}/${
+    props.isLink ? 'thumbnails' : 'images'
+  }/${props.imageId}${props.isBox ? '-box' : ''}`
   const link = `/users/${props.userId}/photo/${props.imageId}`
 
   var bgColor = ''

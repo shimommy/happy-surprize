@@ -38,6 +38,9 @@ export const useUploads = (): ReturnType => {
     let cancel = false
 
     fetchUploads(cancel)
+    setInterval(() => {
+      fetchUploads(false)
+    }, 3000)
     return () => {
       cancel = true
     }

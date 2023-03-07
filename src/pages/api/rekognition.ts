@@ -60,7 +60,10 @@ export default async function handler(
       return
     }
 
-    const buffer = await imageThumbnail(origin)
+    const buffer = await imageThumbnail(origin, {
+      responseType: 'buffer',
+      percentage: 60,
+    })
     const thumbnail = Readable.from(buffer)
     await s3.uploadStream(userId, id, thumbnail, 'thumbnails')
     return origin
