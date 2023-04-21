@@ -77,6 +77,7 @@ export default async function handler(
     origin: Buffer
   ) => {
     try {
+      console.log('test')
       const dimensions = sizeOf(origin)
       const canvas = createCanvas(dimensions.width, dimensions.height)
       const ctx = canvas.getContext('2d')
